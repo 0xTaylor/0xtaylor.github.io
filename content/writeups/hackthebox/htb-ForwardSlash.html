@@ -167,14 +167,9 @@ and the password is N0bodyL1kesBack/ </p>
 
 <h1>Getting user</h1>
 
-<p>I used a tiny script to let me find all the SUID files. Here's the script (you can paste it all into the terminal at once):</p>
+<p>I used a bash command to let me find all the SUID files. Here's the command:</p>
 
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">allsuid=`find / -perm -4000 -type f 2>/dev/null`
-findsuid=`find $allsuid -perm -4000 -type f -exec ls -la {} 2>/dev/null \;`
-if [ "$findsuid" ]; then
-  echo -e "$findsuid" 
-  echo -e "\n"
-fi
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">find find / -perm -4000 -type f 2>/dev/null -perm -4000 -type f -exec ls -la {} 2>/dev/null \;
 </span></code></pre></div>
 
 <p>Once you've done that. You'll notice a process that is owned by the user pain (another user that was saw in the 
