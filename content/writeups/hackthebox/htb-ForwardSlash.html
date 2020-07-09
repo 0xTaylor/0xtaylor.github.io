@@ -167,7 +167,7 @@ and the password is N0bodyL1kesBack/ </p>
 
 <h1>Getting user</h1>
 
-<p>I used a bash command to let me find all the SUID files. Here's the command:</p>
+<p>I used a bash command to let me find all the SUID files, which user owns it and it's file permissions. Here's the command:</p>
 
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">find find / -perm -4000 -type f 2>/dev/null -perm -4000 -type f -exec ls -la {} 2>/dev/null \;
 </span></code></pre></div>
