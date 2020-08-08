@@ -225,6 +225,27 @@ td {
 	vertical-align: top;
 }
 
+@media only screen and (min-width: 400px) {
+	body {
+		font-size: 14px;
+	}
+	.logo {
+		max-height: 100px;
+	}
+}
+
+@media only screen and (min-width: 700px) {
+	body {
+		font-size: 16px;
+	}
+	.logo {
+		max-height: 100px;
+	}
+	article {
+		margin: 0px 0;
+	}
+}
+
 @media print {
 	* {
 		background: transparent !important;
