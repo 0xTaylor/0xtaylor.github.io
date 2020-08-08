@@ -43,21 +43,21 @@
 <article>
 <h1 id="hackthebox---ForwardSlash-writeup">Hackthebox - ForwardSlash Writeup</h1>
 <div class="figure">
-<img src="/img/htb_forwardslash/card.png" width="600" height=""/>
+<img src="/img/htb_forwardslash/card.png" width="100%" style="max-width: 600px" height=""/>
 </div>
 
 <div>
 <h1>Nmap</h1>
 <p>Let's scan for any open ports!</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">nmap -sV -sC -T4 -p- 10.10.10.183</span></code></pre></div>
-<center><img src="/img/htb_forwardslash/0.png" alt="" width="600" height=""/></center></a>
+<center><img src="/img/htb_forwardslash/0.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
 <p>Upon our scan. We see two port open. 22 for SSH. 80 for Apache </p>
 </div>
 
 <div>
 <h1 id="start">Let's begin!</h1>
 <p>When going onto 10.10.10.183, we see that the URL has changed to forwardslash.htb.</p>
-<center><img src="/img/htb_forwardslash/1.png" alt="" width="600" height=""/></center></a>
+<center><img src="/img/htb_forwardslash/1.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
 </div>
 
 <div>
@@ -65,7 +65,7 @@
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">sudo nano /etc/hosts</span></code></pre></div>
 <p>Then add this line:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">10.10.10.183    forwardslash.htb</span></code></pre></div>
-<center><img src="/img/htb_forwardslash/2.png" alt="" width="600"/></center>
+<center><img src="/img/htb_forwardslash/2.png" alt="" width="100%" style="max-width: 600px"/></center>
 <p>Now let's save and quit</p>
 </div>
 
@@ -73,31 +73,31 @@
 <h1 id="enumeration">Getting Started</h1>
 <p>Once we're on the page, we see this page:</p>
 <div class="figure">
-<img src="/img/htb_forwardslash/3.png" width="600" height=""/>
+<img src="/img/htb_forwardslash/3.png" width="100%" style="max-width: 600px" height=""/>
 </div>
 
 </div>
 <h1 id ="Ongoing">Scanning for subdomains</h1>
 <p>Now let's see if we can find any subdomains for this site:</p>
 <div class="figure">
-<img src="/img/htb_forwardslash/4.png" width="600"/>
+<img src="/img/htb_forwardslash/4.png" width="100%" style="max-width: 600px"/>
 <p>we find a subdomain called backup so let's add that to our /etc/hosts and go to it! </p>
-<img src="/img/htb_forwardslash/5.png" width="600"/>
+<img src="/img/htb_forwardslash/5.png" width="100%" style="max-width: 600px"/>
 </div>
 
 <h1>Enumerating on subdomain</h1>
-<center><img src="/img/htb_forwardslash/6.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/6.png" width="100%" style="max-width: 600px"/></center>
 <p>If we go to backup.forwardslash.htb, we can see a login page. Since we don't have a login. We can create one by
 pressing "Sign up now." and making your account. After doing that, Login with your details.</p>
 <div class="figure">
-<img src="/img/htb_forwardslash/7.png" width="600"/>
+<img src="/img/htb_forwardslash/7.png" width="100%" style="max-width: 600px"/>
 </div>
 
 <h1>LFI Found</h1>
 <p>After looking around, we find /profilepicture.php and we see that the field is disabled. Let's disable that by
 inspect elementing and taking off anything that says "Disabled". Before you submit anything. Launch burpsuite and 
 make sure to intercept any request that you make. Once you do that. Should get something like this:</p>
-<center><img src="/img/htb_forwardslash/8.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/8.png" width="100%" style="max-width: 600px"/></center>
 We get this: 
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">
 POST /profilepicture.php HTTP/1.1
@@ -120,7 +120,7 @@ url=test
 
 <p>Now. Let's go to repeater. Copy our intercept and paste it there. For this test, I changed 'test' to 'file:///etc/passwd'
 and sent the request. We got this back:</p>
-<center><img src="/img/htb_forwardslash/9.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/9.png" width="100%" style="max-width: 600px"/></center>
 <p>Success! We got a response!</p><br>
 
 <p>Let's make another request but this time, we forward it to the subdomain and to the directory that displayed a 403 error
@@ -131,7 +131,7 @@ and sent the request. We got this back:</p>
 <p>I already tried just doing /dev without any file after it then tried adding index.html but got no response so 
 index.php may be the answer</p>
 
-<center><img src="/img/htb_forwardslash/10.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/10.png" width="100%" style="max-width: 600px"/></center>
 
 <p>We see something interesting. It says "Permission Denied; not that way ;)"</p>
 <p>After a bit of research. I came across an article that said to filter the output as base64</p>
@@ -140,7 +140,7 @@ index.php may be the answer</p>
 
 <blockquote>php://filter/convert.base64-encode/resource=file:///var/www/backup.forwardslash.htb/dev/index.php</blockquote>
 
-<center><img src="/img/htb_forwardslash/11.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/11.png" width="100%" style="max-width: 600px"/></center>
 
 <p>We got it! Now we need to decrypt the base64 encoded message. An easy way to do this would be this:</p>
 
@@ -161,7 +161,7 @@ and the password is N0bodyL1kesBack/ </p>
 
 <p>Let's see if we can ssh using these credentials since ftp doesn't exist.</p>
 
-<center><img src="/img/htb_forwardslash/12.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/12.png" width="100%" style="max-width: 600px"/></center>
 
 <p>It worked! Unfortunately, we still can't get user yet. So let's get to work!</p>
 
@@ -194,13 +194,13 @@ backup;
 
 <p>Save this into a file .sh file and copy it over to the ssh machine. After executing it. It should give this: </p>
 
-<center><img src="/img/htb_forwardslash/13.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/13.png" width="100%" style="max-width: 600px"/></center>
 
 <p>We got user! The user is pain and password is db1f73a72678e857d91e71d2963a1afa9efbabb32164cc1d94dbc704</p>
 <br>
 <p>Let's see if these work!</p>
 
-<center><img src="/img/htb_forwardslash/14.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/14.png" width="100%" style="max-width: 600px"/></center>
 
 <p>It does! We officially have user!</p>
 
@@ -282,11 +282,11 @@ for i in range(1, 165):
 <p>What we need to do is replace the old script with the new one and launch it. After you've done that,
 you should get this message:</p>
 
-<center><img src="/img/htb_forwardslash/15.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/15.png" width="100%" style="max-width: 600px"/></center>
 
 <p>Now. It says something /var/backups/recovery so let's cd into it. </p>
 
-<center><img src="/img/htb_forwardslash/16.png" width="600"/></center>
+<center><img src="/img/htb_forwardslash/16.png" width="100%" style="max-width: 600px"/></center>
 
 <p>As we can see. We have a file called encrypted_backup.img</p>
 
@@ -303,11 +303,11 @@ you should get this message:</p>
   <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">sudo /bin/mount /dev/mapper/backup ./mnt/</span></code></pre></div>
 
   <p>What these will add do is mount the drive. Mount it to a particular folder (in our case it's ~/mnt) and grab the contents inside</p>
-  <center><img src="/img/htb_forwardslash/17.png" width="600"/></center>
+  <center><img src="/img/htb_forwardslash/17.png" width="100%" style="max-width: 600px"/></center>
 
   <p>Now if we look inside we a file called id_rsa. This is an ssh key that we may be able to use. Let's test it out for root!</p>
 
-  <center><img src="/img/htb_forwardslash/18.png" width="600"/></center>
+  <center><img src="/img/htb_forwardslash/18.png" width="100%" style="max-width: 600px"/></center>
 
   <p><center>We got root! I hope this helped you on your journey to completing ForwardSlash!</center></p>
 </article>
