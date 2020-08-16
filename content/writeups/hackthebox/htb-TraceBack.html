@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" type="text/css" href="/css/style.css">
+  <script src="https://kit.fontawesome.com/65ad30df58.js" crossorigin="anonymous"></script>
+  <link rel='icon' href='/favicon.ico' type='image/x-icon'/>
+  <script src="/dist/mark.min.js" charset="UTF-8"></script>
+<title>Hackthebox - TraceBack Writeup</title>
+<meta property="og:title" content="Hackthebox - TraceBack Writeup" />
+      <meta property="og:description" content="An Easy difficulty linux box" />
+      <meta property="og:type" content="article" />
+      <meta property="og:url" content="github" />
+      <meta property="og:image" content="/img/htb_traceback/card.png" />
+
+</head>
+
+<body>
+  <!-- Side navigation -->
+	<div class="sidebar">
+    <div class="vertical-center">
+      <a href="/index.html" style="text-align:center">
+      <a style="text-align:center"><img class="logo" src="/avatar.png" alt="" width="120" height="120"></a></a>
+      <p style="text-align:center; color:#eee">
+      <b style="font-size:1.7em;text-align:center; color:#eee">0xTaylor</b><br/>
+      <p style="text-align:center;"><small><i>Hackthebox Updates</br> And Writeups</i></small></p>
+      <p style="text-align:center;font-size:20px">
+
+    <div>
+      <center><h3><a href="/">HOME</a></h3></center>
+      
+    </div>
+        <center><a href="https://twitter.com/0xTaylorr" target="_blank" style="display:inline"><i class="fab fa-twitter"></i></a>
+        <a href="https://github.com/0xtaylor" target="_blank" style="display:inline"><i class="fab fa-github"></i></a>
+        <a href="https://discord.gg/pCWTcJ3" target="_blank" style="display:inline"><i class="fab fa-discord"></i></a></center>
+      </p>
+    </div>
+  </br><p><small><i><center>Still in development</center></i></small></p>
+  </div>
+
+<article>
+<h1 id="hackthebox---Book-writeup">Hackthebox - TraceBack Writeup</h1>
+<div class="figure">
+<img src="/img/htb_traceback/card.png" width="100%" style="max-width: 600px" height=""/>
+</div>
+
+<div>
+    <h1>Nmap</h1>
+    <p>As always, we scan for any open ports.</p>
+    <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">nmap -sV -sC -T4 10.10.10.181</span></code></pre></div>
+    <p>We could use -p- to scan more ports but that may take a while so for now, we will be doing the scan without -p-.</p>
+    <center><img src="/img/htb_traceback/0.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+    <p>After our scan was finished. We see two ports. Port 80 for an Apache Webserver and port 22 for SSH.</p>
+
+    <h1>Diving in!</h1>
+    <p>Going onto the website. We are greeted with this webpage:</p>
+    <center><img src="/img/htb_traceback/1.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+    <p>I decided to try and view the source code of the page by pressing ctrl + u and after a quick review of the webpage source. I noticed something that stood out to me.</p>
+    <center><img src="/img/htb_traceback/2.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+    <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">&lt!--Some of the best web shells that you might need ;)--&gt</span></code></pre></div>
+    <p>After a quick google search, I found a github page that had multiple web shells by a user called TheBinitGhmire</p>
+    <center><img src="/img/htb_traceback/3.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+    <p>What I decided to do was press "Go to file" and selected all the files there to use as a wordlist</p>
+    <p>You should get this:</p>
+    <div class="sourceCode">
+<pre class="sourceCode bash">alfa3.php
+alfav3.0.1.php
+andela.php
+bloodsecv4.php
+by.php
+c99ud.php
+cmd.php
+configkillerionkros.php
+jspshell.jsp
+mini.php
+obfuscated-punknopass.php
+punk-nopass.php
+punkholic.php
+r57.php
+smevk.php
+wso2.8.5.php</pre></div>
+
+<p>After this. I saved the file names and added them to a file called shells.txt I ran a gobuster scan (You must change the wordlist path to your path)</p>
+<div class="sourceCode">
+<pre class="sourceCode bash">gobuster dir -u http://10.10.10.181/ -w /home/taylor/shells.txt</pre></div>
+<p>This was my result:</p>
+<center><img src="/img/htb_traceback/4.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>We see a file called smevk.php. Let's go to it:</p>
+<center><img src="/img/htb_traceback/5.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>We have a username and password that we need to enter. Let's see if we can find it in the smevk.php file on github.</p>
+<center><img src="/img/htb_traceback/6.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>So the user is <b>admin</b> and the password is <b>admin</b>. Let's try and login:</p>
+<center><img src="/img/htb_traceback/7.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>After a bit of looking around. I decided to go to "Code Injector". I uploaded a php reverse shell (pentestmonkey monkey's php reverse shell is what I usec). 
+Changed the IP to my IP I use for hackthebox. Set the mode as Overwriter. Called it shell and added PHP. It should look like this:</p>
+<center><img src="/img/htb_traceback/8.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>I then clicked Inject. Setup my listener on port 4444 then went to 10.10.10.181/shell.php</p>
+<center><img src="/img/htb_traceback/9.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<h1>Getting User</h1>
+<p>I now have a shell as the user webadmin. I decided to get an interactive shell. I will be making a blog on how to do so soon.</p>
+<center><img src="/img/htb_traceback/10.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>Looking at note.txt. We see a message addressed to sysadmin. Another user within here.</p>
+<p>Being reminded of the machine. I checked the bash history and saw this:</p>
+<center><img src="/img/htb_traceback/11.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>Let's check out sudo -l since that's what it showed in bash.history.</p>
+<center><img src="/img/htb_traceback/12.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>After I had all of this information. I decided to try and load luvit without a file and launch into sysadmin like so:</p>
+<center><img src="/img/htb_traceback/13.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>We have User!</p>
+
+<h1>Getting Root</h1>
+<p>I decided to get a stable ssh by importing my public ssh key into authorized_keys on sysadmin and sshing in:</p>
+<center><img src="/img/htb_traceback/14.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>I then downloaded pspy64 onto my victim machine. Click <a href="https://github.com/DominicBreuker/pspy#download">here</a> and scroll down until you see pspy64 then download it and upload it to the victim machine.</p>
+<p>After I marked you pspy64 as an executable and launch it. I noticed a process that ran every 30 seconds.</p>
+<center><img src="/img/htb_traceback/15.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>If we go to the folder and look at the permissions. We see that root and sysadmin own the files.</p>
+<center><img src="/img/htb_traceback/16.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>If we look at 00-header. We see a line that comes up when we ssh within the machine.</p>
+<center><img src="/img/htb_traceback/17.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+<p>I realised that any code ran within that file will run as root due to SSH Server running as root. What we could do is 
+upload sysadmin's authorized keys into the root ssh directory and then ssh into root</p>
+<p>We will have to do this quickly as the files get restored every 30 seconds</p>
+<p>cd into /etc/update-motd.d and then do this command:</p>
+<div class="sourceCode">
+  <pre class="sourceCode bash">echo "/home/sysadmin/.ssh/authorized_keys /root/.ssh" >> 00-header</pre></div>
+  <p>Then enter the command then open 2 terminals. One that ssh's into sysadmin like so</p>
+  <div class="sourceCode">
+    <pre class="sourceCode bash">ssh -i ~/.ssh/id_rsa sysadmin@10.10.10.181</pre></div>
+    <p>Then hit enter. After you've done that. Go into your 3rd terminal and enter this:</p>
+    <div class="sourceCode">
+      <pre class="sourceCode bash">ssh -i ~/.ssh/id_rsa root@10.10.10.181</pre></div>
+      <p>This will give you root since the command you did to copy the authorized_keys was executed when you ssh'd into sysadmin</p>
+      <p>It should look something like this:</p>
+      <center><img src="/img/htb_traceback/18.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+      <p>Now you should have root!</p>
+      <center><img src="/img/htb_traceback/19.png" alt="" width="100%" style="max-width: 600px" height=""/></center></a>
+      <p>Well done on getting root fo TraceBack! I hope you enjoyed this walkthrough :)</p>
+
+</article>
+<h1></h1>
+<footer>
+  
+  <br><center>© 0xTaylor 2020</center>
+</footer>
+</body>
